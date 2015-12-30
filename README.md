@@ -10,6 +10,10 @@ which I do want to go to eventually, but I am still learning how everything work
 
 This stack uses Vagrant, Parallels, and Ansible
 
+Make sure to install vagrant-hostsupdater if you want vagrant to manage your hosts
+
+https://github.com/cogitatio/vagrant-hostsupdater
+
 Great tutorial and where I learned about Ansible:
 
 https://sysadmincasts.com/episodes/45-learning-ansible-with-vagrant-part-2-4
