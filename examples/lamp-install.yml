@@ -1,0 +1,65 @@
+---
+
+# common
+- hosts: web
+  sudo: yes
+  gather_facts: no
+
+  vars:
+    http_port: 80
+    domain: lamp.local
+
+  tasks:
+
+    - name: install packages
+      apt: name={{ item }} update_cache=yes state=latest
+      with_items:
+        - apache2
+        - git
+        - mcrypt
+        - php5-cli
+        - php5-curl
+        - php5-fpm
+        - php5-intl
+        - php5-json
+        - php5-mcrypt
+        - php5-mysql
+        - mysql-server
+        - libapache2-mod-auth-mysql
+
+    - name: enabled mod_rewrite
+      apache2_module: name=rewrite state=present
+      notify:
+        - restart apache2
+
+    - name: apache2 listen on port {{ http_port }}
+      lineinfile: dest=/etc/apache2/ports.conf regexp="^Listen " line="Listen {{ http_port }}" state=present
+      notify:
+        - restart apache2
+
+    - name: remove the folder
+      file: path=/var/www/shit state=absent
+
+    - name: setup apache shit symlink
+      file: path=/var/www/shit
+          src=/vagrant/site
+          state=link
+          force=yes
+      notify: restart apache
+
+    - name: create virtual host file
+      template: src=templates/virtualhost.conf.j2 dest=/etc/apache2/sites-available/{{ domain }}.conf
+
+    - name: a2ensite {{ domain }}
+      command: a2ensite {{ domain }}
+      args:
+        creates: /etc/apache2/sites-enabled/{{ domain }}.conf
+      notify:
+        - restart apache2
+
+    - name: clone basic html template
+      git: repo=https://github.com/do-community/ansible-apache-tutorial.git dest=/var/www/example.com update=no
+
+  handlers:
+    - name: restart apache2
+      service: name=apache2 state=restarted
